@@ -1,7 +1,10 @@
-# app.py — FastAPI render service
+import random
+import asyncio
+import time
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
-
-
+SERVICE_URL       = "https://api-jt5t.onrender.com"
 
 app = FastAPI()
 jinja = Jinja2Templates(directory="templates")
