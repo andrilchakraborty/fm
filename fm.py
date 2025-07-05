@@ -16,7 +16,7 @@ LASTFM_SHARED_SEC = "631fdc5966a5ee09c383b2e2dde5b2d7"
 API_ROOT          = "https://ws.audioscrobbler.com/2.0/"
 RECENT_METHOD     = "user.getrecenttracks"
 USER_DATA_FILE    = "lastfm_users.json"
-
+SERVICE_URL       = "https://fm-o04f.onrender.com"
 # ——— Load user→Last.fm mapping ——————————————————————————
 with open(USER_DATA_FILE, "r") as f:
     user_map = json.load(f)
