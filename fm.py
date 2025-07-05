@@ -143,8 +143,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 
-# ——— Keep‑alive ping ——————————————————————————————————————
-SERVICE_URL = "https://api-jt5t.onrender.com"
+
 @app.on_event("startup")
 async def schedule_ping():
     async def pinger():
