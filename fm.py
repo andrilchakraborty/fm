@@ -6,7 +6,6 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Response, Request
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pyppeteer import launch
 
