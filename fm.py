@@ -141,7 +141,7 @@ async def fetch_lastfm_data(user_id: int) -> Optional[dict]:
 # ——— FastAPI app & setup ————————————————————————————————
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 # ——— Keep‑alive ping ——————————————————————————————————————
 SERVICE_URL = "https://api-jt5t.onrender.com"
