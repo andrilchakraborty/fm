@@ -1,10 +1,16 @@
 import random
 import asyncio
 import time
+from typing import Optional
+
+from fastapi import FastAPI, Response, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-SERVICE_URL       = "https://api-jt5t.onrender.com"
+import httpx
+from pyppeteer import launch
+
+SERVICE_URL       = "https://fm-o04f.onrender.com"
 
 app = FastAPI()
 jinja = Jinja2Templates(directory="templates")
