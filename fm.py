@@ -1,9 +1,25 @@
 # app.py — FastAPI render service
 
+
+
+
 app = FastAPI()
 jinja = Jinja2Templates(directory="templates")
 browser = None
-
+# ——— Keep-alive ping ——————————————————————————————————————————
+@app.on_event("startup")
+async def schedule_ping():
+    async def pinger():
+        import httpx
+        async with httpx.AsyncClient(timeout=5) as client:
+            while True:
+                try:
+                    await client.get(f"{SERVICE_URL}/ping")
+                except:
+                    pass
+                await asyncio.sleep(120)
+    asyncio.create_task(pinger())
+    
 @app.on_event("startup")
 async def startup():
     global browser
