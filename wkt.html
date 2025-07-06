@@ -1,180 +1,123 @@
+<!-- templates/wkt.html -->
+
+<!DOCTYPE html>
 <html>
-
 <head>
-    <style>
-        @font-face {
-            font-family: "worksans";
-            src: url("https://fm.bot/fonts/worksans-regular.otf") format("opentype");
-        }
-
-        body {
-            font-family: "worksans";
-            margin-right: 36px;
-            margin-left: 36px;
-            margin-top: 42px;
-            background-color: #282424;
-            color: #dcddde;
-            background: linear-gradient(0deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.75)),
-                        url('{{ image_url }}');
-            background-position: center;
-            background-size: cover;
-            background-attachment: fixed;
-        }
-
-        .float-left {
-            float: left;
-        }
-
-        .float-right {
-            float: right;
-        }
-
-        .align-center {
-            text-align: center;
-        }
-
-        .whoknows {
-            font-size: 24px;
-        }
-
-        .title {
-            font-size: 48px;
-            background-color: #2f3136;
-            padding: 30px 12px;
-            margin-top: -18px;
-            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.6);
-            border-radius: 12px;
-        }
-
-        .subtitle {
-            display: inline-block;
-            background-color: #2f3136;
-            padding: 12px;
-            margin: 12px;
-            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.6);
-            border-radius: 9px;
-        }
-
-        .result-container {
-            margin-top: 42px;
-            display: flex;
-            margin-left: -9px;
-            margin-right: -9px;
-        }
-
-        .crown-view {
-            margin-top: 48px;
-            text-align: center;
-        }
-
-        .float-child {
-            width: 50%;
-            float: left;
-            padding: 12px;
-            flex: 1;
-        }
-
-        .flex-wrap {
-            display: flex;
-            flex-wrap: wrap;
-        }
-
-        .stat-view {
-            margin-top: -30px;
-        }
-
-        .flex-wrap > * {
-            flex: 1 1 auto;
-        }
-
-        img {
-            width: 100%;
-            border-radius: 12px;
-            box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.6);
-            max-height: 612px;
-        }
-
-        .branding {
-            margin-bottom: -30px;
-            display: inline-block;
-            color: rgba(220, 221, 222, 0.4);
-            padding-left: 6px;
-            font-size: 24px;
-        }
-
-        .result-list {
-            background-color: #2f3136;
-            border-radius: 12px;
-            height: 100%;
-            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.6);
-        }
-
-        ul {
-            padding: 24px 24px 6px 24px;
-            margin: 0;
-            list-style-type: none;
-            font-size: 36px;
-        }
-
-        li {
-            margin-bottom: 12px;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .num {
-            width: {{ num_width }}px !important;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-    </style>
+  <meta charset="utf-8"/>
+  <style>
+    @font-face {
+      font-family: "worksans";
+      src: url("https://fm.bot/fonts/worksans-regular.otf") format("opentype");
+    }
+    body {
+      margin: 42px 36px 0 36px;
+      font-family: "worksans", sans-serif;
+      background:
+        linear-gradient(0deg, rgba(0,0,0,0.85), rgba(0,0,0,0.75)),
+        url('{{ image_url }}');
+      background-position: center;
+      background-size: cover;
+      color: #dcddde;
+    }
+    .whoknows { font-size: 24px; }
+    .title {
+      font-size: 48px;
+      text-align: center;
+      background: #2f3136;
+      padding: 30px 12px;
+      margin-top: -18px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    }
+    .subtitle {
+      display: inline-block;
+      background: #2f3136;
+      padding: 12px;
+      margin: 12px;
+      border-radius: 9px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    }
+    .result-container {
+      display: flex;
+      margin: 42px -9px 0 -9px;
+    }
+    .float-child {
+      flex: 1;
+      padding: 12px;
+    }
+    img {
+      width: 100%;
+      max-height: 612px;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+    .branding {
+      margin-top: 12px;
+      font-size: 24px;
+      color: rgba(220,221,222,0.4);
+    }
+    .result-list {
+      background: #2f3136;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      height: 100%;
+    }
+    ul {
+      list-style: none;
+      padding: 24px 24px 6px 24px;
+      margin: 0;
+      font-size: 36px;
+    }
+    li {
+      margin-bottom: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .num {
+      display: inline-block;
+      width: {{ num_width }}px !important;
+      text-align: center;
+    }
+    .stat-view {
+      display: flex;
+      justify-content: center;
+      margin-top: 24px;
+      font-size: 24px;
+    }
+    .stat-view span { margin: 0 6px; }
+    .crown-view {
+      margin-top: 48px;
+      text-align: center;
+    }
+    .hidden { display: none !important; }
+  </style>
 </head>
-
 <body>
-    <div class="title-container">
-        <div class="whoknows subtitle">
-            {{ type }}
-        </div>
-        <div class="whoknows title align-center">
-            {{ title }}
-        </div>
-        <div class="whoknows subtitle float-right">
-            {{ location }}
-        </div>
+  <div class="whoknows subtitle">{{ type }}</div>
+  <div class="whoknows title">{{ title }}</div>
+  <div class="whoknows subtitle" style="float:right">{{ location }}</div>
+
+  <div class="result-container">
+    <div class="float-child {{ hide_img }}">
+      <img src="{{ image_url }}" alt="cover art"/>
+      <div class="branding">Powered by .fmbot</div>
     </div>
-
-    <div class="result-container">
-        <div class="float-child {{ hide_img }}">
-            <img src="{{ image_url }}">
-            <div class="branding">
-                Powered by .fmbot
-            </div>
-        </div>
-
-        <div class="float-child">
-            <div class="result-list">
-                <ul>
-                    {{ users | safe }}
-                </ul>
-            </div>
-
-            <div class="whoknows subtitle align-center flex-wrap stat-view">
-                <span class="float-left">{{ listeners }} listeners</span>
-                <span><b>·</b></span>
-                <span class="float-right">{{ plays }} plays</span>
-                <span><b>·</b></span>
-                <span>{{ average }} avg</span>
-            </div>
-        </div>
+    <div class="float-child">
+      <div class="result-list">
+        <ul>{{ users | safe }}</ul>
+      </div>
+      <div class="whoknows subtitle stat-view">
+        <span>{{ listeners }} listeners</span>
+        <b>·</b>
+        <span>{{ plays }} plays</span>
+        <b>·</b>
+        <span>{{ average }} avg</span>
+      </div>
     </div>
+  </div>
 
-    <div class="subtitle align-center flex-wrap crown-view {{ crown_hide }}">
-        <span>{{ crown_text }}</span>
-    </div>
+  <div class="whoknows subtitle crown-view {{ crown_hide }}">
+    {{ crown_text }}
+  </div>
 </body>
-
 </html>
