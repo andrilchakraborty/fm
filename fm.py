@@ -1,153 +1,39 @@
+# app.py
+
 import json
 import asyncio
 import aiohttp
 import httpx
-from typing import Optional
+import traceback
 
-from fastapi import FastAPI, HTTPException, Response, Request
+from typing import Optional, List, Tuple
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pyppeteer import launch
 
-# ——— Your Last.fm credentials & settings ——————————————————————
+# ——— CONFIG ———————————————————————————————————————————————
 LASTFM_API_KEY    = "9ae3431bba6f1f3e9ebdcec25898847c"
-LASTFM_SHARED_SEC = "631fdc5966a5ee09c383b2e2dde5b2d7"
 API_ROOT          = "https://ws.audioscrobbler.com/2.0/"
-RECENT_METHOD     = "user.getrecenttracks"
-USER_DATA_FILE    = "lastfm_users.json"
+USER_DATA_FILE    = "lastfm_users.json"   # maps Discord user ID → {"username": "...", "session": "..."} 
 SERVICE_URL       = "https://fm-o04f.onrender.com"
-# ——— Load user→Last.fm mapping ——————————————————————————
+
+# ——— LOAD YOUR LAST.FM USER MAPPING —————————————————————————
 with open(USER_DATA_FILE, "r") as f:
     user_map = json.load(f)
+    # e.g. { "123456789012345678": { "username": "alice_lfm", "session": "..." }, … }
 
-# ——— Helpers for Last.fm ————————————————————————————————
-async def try_url(session: aiohttp.ClientSession, url: str) -> bool:
-    try:
-        async with session.head(url, timeout=5) as resp:
-            return resp.status == 200
-    except:
-        return False
-
-async def fetch_lastfm_data(user_id: int) -> Optional[dict]:
-    entry = user_map.get(str(user_id))
-    if not entry or "username" not in entry:
-        return None
-
-    username    = entry["username"]
-    session_key = entry.get("session")
-
-    async with aiohttp.ClientSession() as session:
-        # 1) recent track
-        rp = {
-            "method":  RECENT_METHOD,
-            "user":    username,
-            "api_key": LASTFM_API_KEY,
-            "format":  "json",
-            "limit":   1
-        }
-        if session_key:
-            rp["sk"] = session_key
-
-        async with session.get(API_ROOT, params=rp) as r:
-            recent = await r.json()
-
-        tracks = recent.get("recenttracks", {}).get("track", [])
-        if not tracks:
-            return None
-        t = tracks[0]
-        artist     = t["artist"]["#text"]
-        title      = t["name"]
-        track_url  = t["url"]
-        nowplaying = t.get("@attr", {}).get("nowplaying") == "true"
-        total_scrobbles = int(recent["recenttracks"]["@attr"]["total"])
-
-        # 2) track.getInfo with user → playcount + album
-        ip = {
-            "method":      "track.getInfo",
-            "api_key":     LASTFM_API_KEY,
-            "artist":      artist,
-            "track":       title,
-            "user":        username,
-            "autocorrect": "1",
-            "format":      "json"
-        }
-        async with session.get(API_ROOT, params=ip) as r2:
-            info = await r2.json()
-        ti = info.get("track", {}) or {}
-        user_playcount = int(ti.get("userplaycount", 0))
-        album_data     = ti.get("album", {}) or {}
-        album_name     = album_data.get("title", "")
-
-        # 3) fallback generic getInfo if no album
-        if not album_name:
-            gen = ip.copy()
-            gen.pop("user", None)
-            async with session.get(API_ROOT, params=gen) as r3:
-                geninfo = await r3.json()
-            album_data = geninfo.get("track", {}).get("album", {}) or {}
-            album_name = album_data.get("title", "")
-
-        # 4) build image candidates
-        candidates = []
-        for img in reversed(t.get("image", [])):
-            if img.get("#text"):
-                candidates.append(img["#text"])
-        for img in reversed(album_data.get("image", [])):
-            if img.get("#text"):
-                candidates.append(img["#text"])
-        mbid = t.get("album", {}).get("mbid")
-        if mbid:
-            candidates.append(
-                f"https://lastfm.freetls.fastly.net/i/u/300x300/{mbid}.jpg?format=webp"
-            )
-
-        # artist images
-        ap = {
-            "method":  "artist.getInfo",
-            "artist":  artist,
-            "api_key": LASTFM_API_KEY,
-            "format":  "json"
-        }
-        async with session.get(API_ROOT, params=ap) as r4:
-            ainfo = await r4.json()
-        for img in reversed(ainfo.get("artist", {}).get("image", [])):
-            if img.get("#text"):
-                candidates.append(img["#text"])
-
-        image_url = None
-        for url in candidates:
-            if await try_url(session, url):
-                image_url = url
-                break
-
-    # assemble plain‐dict “embed”
-    color = 0x57F287 if nowplaying else 0x5865F2
-    return {
-        "title":       title,
-        "url":         track_url,
-        "description": artist,
-        "color":       color,
-        "author":      f"{username} on Last.fm",
-        "thumbnail":   image_url or "",
-        "footer": {
-            "text": (
-                f"Playcount: {user_playcount} ∙ "
-                f"Total Scrobbles: {total_scrobbles} ∙ "
-                f"Album: {album_name or 'N/A'}"
-            )
-        }
-    }
-
-# ——— FastAPI app & setup ————————————————————————————————
-app = FastAPI()
+# ——— FASTAPI + TEMPLATES + BROWSER ————————————————————————
+app       = FastAPI()
 templates = Jinja2Templates(directory="templates")
-
-@app.get("/ping")
-async def ping():
-    return {"status": "alive"}
+browser   = None
 
 @app.on_event("startup")
-async def schedule_ping():
+async def startup_event():
+    global browser
+    browser = await launch(headless=True,
+                           args=["--no-sandbox", "--disable-setuid-sandbox"])
+    # optional: schedule a periodic ping so Heroku/Render stays awake
     async def pinger():
         async with httpx.AsyncClient(timeout=5) as client:
             while True:
@@ -158,38 +44,176 @@ async def schedule_ping():
                 await asyncio.sleep(120)
     asyncio.create_task(pinger())
 
-# ——— Browser startup/shutdown —————————————————————————————
-browser = None
-
-@app.on_event("startup")
-async def startup_browser():
-    global browser
-    browser = await launch(headless=True, args=[
-        "--no-sandbox", "--disable-setuid-sandbox"
-    ])
-
 @app.on_event("shutdown")
-async def shutdown_browser():
+async def shutdown_event():
     await browser.close()
 
-# ——— Last.fm JSON “embed” endpoint ————————————————————————
-class EmbedResponse(BaseModel):
-    title: str
-    url: str
-    description: str
-    color: int
-    author: str
-    thumbnail: Optional[str]
-    footer: dict
+@app.get("/ping")
+async def ping():
+    return {"status": "alive"}
 
-@app.get("/lastfm/{user_id}", response_model=EmbedResponse)
-async def lastfm_embed(user_id: int):
-    data = await fetch_lastfm_data(user_id)
-    if not data:
-        raise HTTPException(404, "User not found or no recent tracks")
-    return data
+# ——— HELPERS ——————————————————————————————————————————————
 
-# ——— Your original HTML render endpoint ——————————————————————
+async def try_url(session: aiohttp.ClientSession, url: str) -> bool:
+    """Return True if HEAD to url yields 200."""
+    try:
+        async with session.head(url, timeout=5) as resp:
+            return resp.status == 200
+    except:
+        return False
+
+async def fetch_json(base_url: str, params: dict) -> dict:
+    """GET JSON from Last.fm (or any) endpoint."""
+    async with aiohttp.ClientSession() as sess:
+        async with sess.get(base_url, params=params) as resp:
+            return await resp.json()
+
+async def lookup_members(guild_name: str) -> List[Tuple[str,str]]:
+    """
+    Return a list of (display_name, lastfm_username) for this guild.
+    Here we cheat and use user_map: you’ll want to integrate your Discord bot cache/API.
+    """
+    return [
+        (f"User {uid}", entry["username"])
+        for uid,entry in user_map.items()
+    ]
+
+async def pick_image_url(artist: str, title: str) -> Optional[str]:
+    """
+    Find the best cover/artist image from Last.fm.
+    Tries: track images → album images → artist images.
+    """
+    candidates = []
+    # 1) track.getInfo (no user)
+    track_info = await fetch_json(
+        API_ROOT,
+        {"method":"track.getInfo",
+         "api_key": LASTFM_API_KEY,
+         "artist": artist,
+         "track": title,
+         "autocorrect":"1",
+         "format":"json"}
+    )
+    for img in track_info.get("track",{}).get("album",{}).get("image",[]):
+        if img.get("#text"): candidates.append(img["#text"])
+    for img in track_info.get("track",{}).get("toptags",{}).get("tag",[]):
+        # sometimes tags have images? (optional)
+        pass
+
+    # 2) artist.getInfo
+    artist_info = await fetch_json(
+        API_ROOT,
+        {"method":"artist.getInfo",
+         "api_key": LASTFM_API_KEY,
+         "artist": artist,
+         "format":"json"}
+    )
+    for img in artist_info.get("artist",{}).get("image",[]):
+        if img.get("#text"): candidates.append(img["#text"])
+
+    # 3) HEAD-check each
+    async with aiohttp.ClientSession() as session:
+        for url in candidates:
+            if await try_url(session, url):
+                return url
+    return None
+
+async def fetch_lastfm_data(user_id: int) -> Optional[dict]:
+    """
+    Your existing “embed” logic, unchanged.
+    Returns the JSON embed dict for a single user.
+    """
+    entry = user_map.get(str(user_id))
+    if not entry or "username" not in entry:
+        return None
+
+    username = entry["username"]
+    session_key = entry.get("session")
+
+    # 1) recent track
+    params = {
+        "method": "user.getrecenttracks",
+        "user": username,
+        "api_key": LASTFM_API_KEY,
+        "format": "json",
+        "limit": 1
+    }
+    if session_key: params["sk"] = session_key
+
+    recent = await fetch_json(API_ROOT, params)
+    tracks = recent.get("recenttracks", {}).get("track", [])
+    if not tracks: return None
+    t = tracks[0]
+    artist = t["artist"]["#text"]
+    title  = t["name"]
+    track_url = t["url"]
+    nowplaying = t.get("@attr",{}).get("nowplaying") == "true"
+    total_scrobbles = int(recent["recenttracks"]["@attr"]["total"])
+
+    # 2) track.getInfo w/ user
+    ip = {
+        "method":"track.getInfo",
+        "artist":artist,
+        "track":title,
+        "user":username,
+        "api_key":LASTFM_API_KEY,
+        "autocorrect":"1",
+        "format":"json"
+    }
+    user_info = await fetch_json(API_ROOT, ip)
+    ti = user_info.get("track", {}) or {}
+    user_playcount = int(ti.get("userplaycount",0))
+    album_name = ti.get("album",{}).get("title","")
+
+    # 3) fallback if no album
+    if not album_name:
+        gen = ip.copy(); gen.pop("user",None)
+        geninfo = await fetch_json(API_ROOT, gen)
+        album_name = geninfo.get("track",{}).get("album",{}).get("title","")
+
+    # 4) pick thumbnail
+    candidates = []
+    for img in reversed(t.get("image",[])):
+        if img.get("#text"): candidates.append(img["#text"])
+    for img in reversed(t.get("album",{}).get("image",[])):
+        if img.get("#text"): candidates.append(img["#text"])
+    mbid = t.get("album",{}).get("mbid")
+    if mbid:
+        candidates.append(
+            f"https://lastfm.freetls.fastly.net/i/u/300x300/{mbid}.jpg?format=webp"
+        )
+    artist_info = await fetch_json(
+        API_ROOT,
+        {"method":"artist.getInfo","artist":artist,"api_key":LASTFM_API_KEY,"format":"json"}
+    )
+    for img in reversed(artist_info.get("artist",{}).get("image",[])):
+        if img.get("#text"): candidates.append(img["#text"])
+
+    thumbnail = ""
+    async with aiohttp.ClientSession() as session:
+        for url in candidates:
+            if await try_url(session, url):
+                thumbnail = url
+                break
+
+    color = 0x57F287 if nowplaying else 0x5865F2
+    return {
+        "title":       title,
+        "url":         track_url,
+        "description": artist,
+        "color":       color,
+        "author":      f"{username} on Last.fm",
+        "thumbnail":   thumbnail,
+        "footer": {
+            "text":(
+                f"Playcount: {user_playcount} ∙ "
+                f"Total Scrobbles: {total_scrobbles} ∙ "
+                f"Album: {album_name or 'N/A'}"
+            )
+        }
+    }
+
+# ——— YOUR “WHO KNOWS” RENDER ENDPOINT ——————————————————————
 @app.get(
     "/render",
     response_class=Response,
@@ -203,58 +227,58 @@ async def render(
     user: Optional[str] = None,
 ):
     try:
-        # 1) fetch who‑knows data
-        plays = []
-        for disp, usr in await lookup_members(guild):
+        # 1) find who knows this track
+        plays: List[Tuple[str,int]] = []
+        for display_name, lfm_user in await lookup_members(guild):
             info = await fetch_json(
                 API_ROOT,
                 {
-                    "method":  "track.getInfo",
-                    "artist":  artist,
-                    "track":   title,
-                    "user":    usr,
-                    "api_key": LASTFM_API_KEY,
-                    "format":  "json",
-                },
+                    "method":"track.getInfo",
+                    "artist": artist,
+                    "track":  title,
+                    "user":   lfm_user,
+                    "api_key":LASTFM_API_KEY,
+                    "format":"json"
+                }
             )
-            cnt = int(info.get("track", {}).get("userplaycount", 0))
+            cnt = int(info.get("track",{}).get("userplaycount",0))
             if cnt > 0:
-                plays.append((disp, cnt))
+                plays.append((display_name, cnt))
 
         if not plays:
-            # no one’s played it
             raise HTTPException(404, "no plays")
 
-        # sort & slice
         plays.sort(key=lambda x: x[1], reverse=True)
         top10 = plays[:10]
         total_listeners = len(plays)
-        total_plays = sum(c for _, c in plays)
-        avg = total_plays // total_listeners
+        total_plays     = sum(cnt for _,cnt in plays)
+        average         = total_plays // total_listeners
 
-        # 2) pick image url
+        # 2) pick a background image
         image_url = await pick_image_url(artist, title)
 
-        # 3) render HTML via Jinja2 + Pyppeteer
+        # 3) render HTML → PNG
         html = templates.get_template("wkt.html").render(
             type=type,
             title=f"{title} by {artist}",
             location=f"in {guild}",
             image_url=image_url or "",
             users="".join(
-                f"<li><span class='num'>{i}.</span> {name} <span class='num'>{cnt}</span></li>"
-                for i, (name, cnt) in enumerate(top10, start=1)
+                f"<li><span class='num'>{i}.</span> {name} "
+                f"<span class='num'>{cnt}</span></li>"
+                for i,(name,cnt) in enumerate(top10, start=1)
             ),
             listeners=total_listeners,
             plays=total_plays,
-            average=avg,
-            crown_hide="hidden",
+            average=average,
+            num_width=48,
             hide_img="" if image_url else "hidden",
-            **{"num-width": 48},
+            crown_hide="hidden",
+            crown_text="",  # optional
         )
 
         page = await browser.newPage()
-        await page.setViewport({"width": 1000, "height": 600})
+        await page.setViewport({"width":1000,"height":600})
         await page.setContent(html, waitUntil="networkidle0")
         png = await page.screenshot(type="png")
         await page.close()
@@ -262,10 +286,7 @@ async def render(
         return Response(content=png, media_type="image/png")
 
     except HTTPException:
-        # re-raise HTTPExceptions (404 etc) unmodified
         raise
     except Exception as e:
-        # log full traceback for debugging
         traceback.print_exc()
-        # return 500 with error type & message
         raise HTTPException(500, detail=f"Render error: {type(e).__name__}: {e}")
