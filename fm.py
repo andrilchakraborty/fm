@@ -142,7 +142,9 @@ async def fetch_lastfm_data(user_id: int) -> Optional[dict]:
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-
+@app.get("/ping")
+async def ping():
+    return {"status": "alive"}
 
 @app.on_event("startup")
 async def schedule_ping():
