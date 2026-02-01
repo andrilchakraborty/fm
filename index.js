@@ -32,9 +32,9 @@
 </head>
 <body>
   <div id="start-screen">
-    <div>r/balls bouncer – try closing them 😈</div>
-    <button id="launch">LAUNCH CHAOS</button>
-    <div id="status">Loaded 50+ real r/balls images</div>
+    <div>I WANNA FUCK U</div>
+    <button id="launch">UGHHHH</button>
+    <div id="status">IM CUMMING!!!!</div>
   </div>
 
   <script>
