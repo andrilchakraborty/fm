@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title></title>
+   
+    <link rel="icon" href="https://media.discordapp.net/attachments/1336806156630495322/1337903491875868794/033fb03117bc34cc3adb5ad9c02cc683.png?ex=67a92339&is=67a7d1b9&hm=1be06a581e589b40a4f980a3e5fee4f1f0bbf82b9617d2c0c801a90ea6b403fb&=&format=webp&quality=lossless&width=281&height=281" type="image/png">
+   
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            cursor: ur[](https://r2.guns.lol/5aecb32e-11c6-4d10-814d-a210866a3cf9.cur) 16 16, auto !important;
+            height: 100vh;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+            background-color: #000;
+            transition: background-color 1s ease-in-out;
+        }
+        .initial-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            opacity: 1;
+            transition: opacity 1s ease-in-out;
+        }
+        .initial-text {
+            font-size: 2.5rem;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        video.background-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+        .typewriter-text {
+            display: inline-block;
+            font-size: 3rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            color: red;
+            position: relative;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 2px white, 0 0 5px white, 0 0 10px white;
+        }
+        .typewriter-text::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: ur[](https://assets.guns.lol/sparkle_white.gif) repeat;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .content-slide-up {
+            animation: slideUp 1s ease-out forwards;
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        .social-icon {
+            width: 50px;
+            height: 50px;
+            background-size: cover;
+            position: relative;
+            filter: invert(1) brightness(1000%) drop-shadow(0 0 5px white) drop-shadow(0 0 15px white) drop-shadow(0 0 25px white);
+            transition: transform 0.3s ease;
+        }
+        .social-icon:hover {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+        .social-icon::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: ur[](https://assets.guns.lol/sparkle_white.gif) repeat;
+            z-index: 1;
+            pointer-events: none;
+        }
+        audio {
+            margin-top: 2rem;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+        }
+        .cursor {
+            display: inline-block;
+            width: 5px;
+            height: 35px;
+            background-color: white;
+            margin-left: 5px;
+            animation: blink 0.8s step-end infinite;
+        }
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+        .socials-container {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 2rem;
+        }
+        .socials-container .typewriter-text {
+            font-size: 3.5rem;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 2px white, 0 0 5px white, 0 0 10px white;
+        }
+        .socials-container .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 1rem;
+        }
+        .description-text {
+            font-size: 1.5rem;
+            color: white;
+            text-align: center;
+            text-shadow: 0 0 10px white, 0 0 20px white, 0 0 30px white;
+            margin-top: 1.5rem;
+            font-weight: normal;
+        }
+    </style>
+    <meta property="og:title" content="Stop lookin" />
+    <meta property="og:description" content="stop stalking and click it mf!." />
+    <meta property="og:image" content="https://media.discordapp.net/attachments/1336806156630495322/1337903491875868794/033fb03117bc34cc3adb5ad9c02cc683.png?ex=67a92339&is=67a7d1b9&hm=1be06a581e589b40a4f980a3e5fee4f1f0bbf82b9617d2c0c801a90ea6b403fb&=&format=webp&quality=lossless&width=281&height=281" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://andrilchakraborty.github.io/fm/" />
+</head>
+<body>
+    <div class="initial-screen" id="initial-screen">
+        <div class="initial-text" onclick="enterSite()">Click For Tech Support</div>
+    </div>
+
+    <video class="background-video" autoplay loop muted>
+        <source src="https://cdn.discordapp.com/attachments/1336806156630495322/1337899189052641371/lv_0_20250208153322.mp4?ex=67a91f37&is=67a7cdb7&hm=2c40e2ba15ca37ee9d28b7e7b20606a624db9ca2a6d5d5c220c08f0689ed94fb&" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div id="main-content" class="content-slide-up" style="display:none;">
+        <div class="socials-container">
+            <div class="typewriter-text" id="typewriter"><span id="ip-text"></span><span class="cursor" id="cursor"></span></div>
+            <div class="description-text">Welcome to Microsoft support how may i help you?</div>
+            <div class="social-icons">
+                <a href="https://support.microsoft.com/en-us" target="_blank" style="display: block;" class="social-icon" title="amgquiet">
+                    <img src="https://img.icons8.com/color/48/microsoft.png" alt="Twitter Icon"/>
+                </a>
+                <a href="https://amazon.com" target="_blank" style="display: block;" class="social-icon" title="Roblox">
+                    <img src="https://img.icons8.com/color/48/amazon.png" alt="Roblox Icon"/>
+                </a>
+                <a href="https://paypal.com" target="_blank" style="display: block;" class="social-icon" title="q3os">
+                    <img src="https://img.icons8.com/color/48/paypal.png" alt="TikTok Icon"/>
+                </a>
+                <a href="https://ebay.com" target="_blank" style="display: block;" class="social-icon" title="Spotify">
+                    <img src="https://img.icons8.com/color/48/ebay.png" alt="Spotify Icon"/>
+                </a>
+                <a href="https://cashapp.com" target="_blank" style="display: block;" class="social-icon" title="Steam">
+                    <img src="https://img.icons8.com/?size=48&id=mlOg8xC4khEI&format=png&color=000000" alt="Steam Icon"/>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <audio id="background-audio" loop>
+        <source src="https://cdn.discordapp.com/attachments/1336806156630495322/1337881190782206002/y2mate.com_-_lil_yachty_x_future_x_playboi_carti_flex_up_AT_mixxx.mp3?ex=67a90e74&is=67a7bcf4&hm=1cc55f4e9dd7bf24e4f9226a00ba1cf5208983092ef2a92a271297967140d150&" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Load the bouncing windows script -->
+    <script src="index.js"></script>
+
+    <script>
+        async function fetchAndDisplayIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                typeOutText(data.ip, 'ip-text');
+            } catch (error) {
+                console.error('Failed to fetch IP:', error);
+                document.getElementById('ip-text').textContent = '???';
+            }
+        }
+
+        function typeOutText(text, elementId) {
+            const element = document.getElementById(elementId);
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index < text.length) {
+                    element.textContent += text[index];
+                    index++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 150);
+        }
+
+        document.body.addEventListener('click', function() {
+            const audio = document.getElementById('background-audio');
+            audio.play().catch(() => {});
+        });
+
+        function enterSite() {
+            document.getElementById('initial-screen').style.opacity = '0';
+            setTimeout(function() {
+                document.getElementById('initial-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                
+                fetchAndDisplayIP();
+
+                // Start the r/balls bouncing chaos
+                if (typeof startBallsChaos === 'function') {
+                    startBallsChaos();
+                } else {
+                    console.error("index.js did not load correctly or startBallsChaos is missing");
+                }
+            }, 1000);
+        }
+
+        // Fake typing title bar animation
+        let titleIndex = 0;
+        let typingDirection = 1;
+        function updateTitle() {
+            const partBefore = "@";
+            const partAfter = " P i n g u";
+            if (typingDirection === 1) {
+                document.title = partBefore + partAfter.substring(0, titleIndex);
+                titleIndex++;
+                if (titleIndex === partAfter.length) {
+                    typingDirection = -1;
+                    setTimeout(() => {
+                        document.title = partBefore + partAfter;
+                    }, 500);
+                }
+            } else {
+                document.title = partBefore + partAfter.substring(0, titleIndex);
+                titleIndex--;
+                if (titleIndex === 0) {
+                    typingDirection = 1;
+                }
+            }
+        }
+        setInterval(updateTitle, 150);
+    </script>
+</body>
+</html>
