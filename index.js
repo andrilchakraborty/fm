@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>IDIOT.exe – Close & Multiply</title>
+  <title>IDIOT.exe</title>
   <style>
     body {
       margin: 0;
