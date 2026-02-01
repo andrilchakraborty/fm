@@ -106,7 +106,7 @@
     // ────────────────────────────────────────────────
     // Helpers (unchanged from your last version)
     // ────────────────────────────────────────────────
-    function openPopupBlank(title = "Bouncing Balls.exe") {
+    function openPopupBlank(title = IDIOT.exe") {
       const left = (screen.availWidth - POPUP_WIDTH) / 2 + ((Math.random()*260 - 130)|0);
       const top  = (screen.availHeight - POPUP_HEIGHT) / 2 + ((Math.random()*180 - 90 )|0);
       const features = `width=${POPUP_WIDTH},height=${POPUP_HEIGHT},left=${left},top=${top},resizable=yes,scrollbars=no,status=no,toolbar=no,menubar=no,location=no`;
