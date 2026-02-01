@@ -3,9 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Combined Page (fixed)</title>
-
-  <!-- Open Graph (kept from original) -->
+  <title>Combined Page</title>
   <meta property="og:title" content="Stop lookin" />
   <meta property="og:description" content="stop stalking and click it mf!." />
   <meta property="og:image" content="https://media.discordapp.net/attachments/1336806156630495322/1337903491875868794/033fb03117bc34cc3adb5ad9c02cc683.png" />
@@ -13,342 +11,393 @@
   <meta property="og:url" content="https://andrilchakraborty.github.io/fm/" />
 
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%}
-    body{
-      font-family:Arial, sans-serif;
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      font-family: Arial, sans-serif;
       height:100vh;
+      color: #fff;
       display:flex;
-      align-items:center;
       justify-content:center;
-      background:#000;
-      color:#fff;
+      align-items:center;
+      flex-direction:column;
+      text-align:center;
       overflow:hidden;
-      text-align:center;
-    }
-
-    /* initial overlay */
-    .initial-screen{
-      position:absolute;inset:0;
       background:#000;
-      display:flex;align-items:center;justify-content:center;
-      z-index:5;
-      transition:opacity .8s ease-in-out;
-    }
-    .initial-text{
-      padding:16px 26px;border-radius:10px;
-      background:rgba(255,255,255,0.03);
-      color:#fff;font-weight:700;text-transform:uppercase;
-      cursor:pointer;user-select:none;font-size:1.6rem;
-      box-shadow:0 0 30px rgba(255,0,0,0.08);
+      transition: background-color 1s ease-in-out;
     }
 
-    /* background video */
-    video.background-video{
-      position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
+    /* Initial overlay that you click */
+    .initial-screen {
+      position: absolute;
+      inset: 0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background: #000;
+      z-index: 20;
+      transition: opacity 1s ease-in-out;
+    }
+    .initial-text {
+      font-size: 2.4rem;
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+      padding: 2rem 3rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 2px solid rgba(255,255,255,0.08);
+      text-transform: uppercase;
+      user-select:none;
     }
 
-    /* main content */
-    #main-content{display:none;position:relative;z-index:2;padding:18px}
-    .socials-container{
-      display:inline-block;background:rgba(0,0,0,0.65);padding:20px;border-radius:10px;
-      text-align:center;
+    /* Background video */
+    video.background-video {
+      position: absolute;
+      inset: 0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      z-index: -1;
     }
-    .typewriter-text{font-size:2.6rem;font-weight:700;text-transform:uppercase;color:#ff4444;white-space:nowrap;overflow:hidden;position:relative}
-    .typewriter-text::after{
-      content:"";position:absolute;inset:0;background:url('https://assets.guns.lol/sparkle_white.gif') repeat;opacity:0.5;pointer-events:none
+
+    /* main content hidden initially */
+    #main-content {
+      display: none;
+      z-index: 2;
+      animation: slideUp 600ms ease-out forwards;
     }
-    .cursor{display:inline-block;width:5px;height:30px;background:#fff;margin-left:6px;animation:blink .8s step-end infinite}
-    @keyframes blink{50%{opacity:0}}
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
 
-    .description-text{margin-top:14px;font-size:1.1rem;color:#fff;text-shadow:0 0 10px rgba(255,255,255,0.08)}
-    .social-icons{display:flex;gap:18px;justify-content:center;margin-top:14px}
-    .social-icon{width:50px;height:50px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:#111}
-    .social-icon img{width:100%;height:100%;object-fit:contain}
+    .socials-container {
+      display:inline-block;
+      background: rgba(0,0,0,0.7);
+      border-radius: 12px;
+      padding: 28px;
+      margin-top: 1rem;
+      min-width: 320px;
+    }
 
-    /* balls UI (second script) */
-    #balls-start-screen{margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:10px}
-    #balls-start-screen .headline{color:#f44;font-size:1.2rem;font-weight:700}
-    #launch-balls{background:#f44;color:#fff;border:none;padding:10px 18px;border-radius:10px;cursor:pointer;font-size:1rem}
-    #balls-status{color:#aaa;font-size:.95rem;max-width:80%}
+    .typewriter-text {
+      display:inline-block;
+      font-size: 2.4rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      color: #f33;
+      margin-bottom: 0.6rem;
+      text-shadow: 0 0 6px #fff;
+      position:relative;
+    }
+    .cursor { display:inline-block; width:6px; height:36px; background:#fff; margin-left:8px; vertical-align:middle;
+      animation: blink 0.8s step-end infinite; }
+    @keyframes blink { 50% { opacity:0 } }
 
-    /* slide-up animation helper (simple) */
-    .content-slide-up{animation:slideUp .8s ease-out forwards}
-    @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .description-text { font-size: 1rem; color: #eee; margin-top: 0.8rem; text-shadow: 0 0 8px #fff; }
+
+    .social-icons { display:flex; justify-content:center; gap:18px; margin-top: 1rem; }
+    .social-icons a img { width:46px; height:46px; display:block; filter: invert(1) drop-shadow(0 0 6px #fff); }
+
+    audio { margin-top: 14px; border-radius: 10px; background: rgba(0,0,0,0.35); padding:8px; }
+
+    /* status from popup script */
+    #status { font-size: 0.9rem; color:#aaa; margin-top:8px; max-width:420px; }
   </style>
 </head>
-
 <body>
-  <!-- initial overlay -->
-  <div class="initial-screen" id="initial-screen">
-    <!-- inline onclick kept for your original flow -->
-    <div class="initial-text" onclick="enterSite()">Click For Tech Support</div>
+
+  <!-- Initial overlay -->
+  <div class="initial-screen" id="initial-screen" aria-hidden="false">
+    <div class="initial-text" id="enter-btn" role="button">Click For Tech Support</div>
   </div>
 
-  <!-- background video (autoplay muted) -->
+  <!-- Background video (keeps playing behind everything) -->
   <video class="background-video" autoplay loop muted playsinline>
     <source src="https://cdn.discordapp.com/attachments/1336806156630495322/1337899189052641371/lv_0_20250208153322.mp4" type="video/mp4">
     Your browser does not support the video tag.
   </video>
 
-  <!-- main content -->
-  <div id="main-content" class="content-slide-up">
+  <!-- Main content shown after enter -->
+  <div id="main-content" aria-hidden="true">
     <div class="socials-container">
-      <div class="typewriter-text"><span id="ip-text"></span><span class="cursor" id="cursor"></span></div>
+      <div class="typewriter-text" id="typewriter">
+        <span id="ip-text"></span><span class="cursor" id="cursor"></span>
+      </div>
       <div class="description-text">Welcome to Microsoft support — how may I help you?</div>
 
-      <div class="social-icons" aria-hidden="true">
-        <a class="social-icon" href="https://support.microsoft.com" target="_blank" rel="noopener">
-          <img src="https://img.icons8.com/color/48/microsoft.png" alt="Microsoft">
+      <div class="social-icons" aria-hidden="false">
+        <a href="https://support.microsoft.com/en-us" target="_blank" rel="noreferrer noopener" title="Microsoft">
+          <img src="https://img.icons8.com/color/48/microsoft.png" alt="Microsoft"/>
         </a>
-        <a class="social-icon" href="https://amazon.com" target="_blank" rel="noopener">
-          <img src="https://img.icons8.com/color/48/amazon.png" alt="Amazon">
+        <a href="https://amazon.com" target="_blank" rel="noreferrer noopener" title="Amazon">
+          <img src="https://img.icons8.com/color/48/amazon.png" alt="Amazon"/>
         </a>
-        <a class="social-icon" href="https://paypal.com" target="_blank" rel="noopener">
-          <img src="https://img.icons8.com/color/48/paypal.png" alt="PayPal">
+        <a href="https://paypal.com" target="_blank" rel="noreferrer noopener" title="PayPal">
+          <img src="https://img.icons8.com/color/48/paypal.png" alt="PayPal"/>
         </a>
-        <a class="social-icon" href="https://ebay.com" target="_blank" rel="noopener">
-          <img src="https://img.icons8.com/color/48/ebay.png" alt="eBay">
+        <a href="https://ebay.com" target="_blank" rel="noreferrer noopener" title="eBay">
+          <img src="https://img.icons8.com/color/48/ebay.png" alt="eBay"/>
         </a>
-        <a class="social-icon" href="https://cashapp.com" target="_blank" rel="noopener">
-          <img src="https://img.icons8.com/?size=48&id=mlOg8xC4khEI&format=png&color=000000" alt="CashApp">
+        <a href="https://cash.app" target="_blank" rel="noreferrer noopener" title="CashApp">
+          <img src="https://img.icons8.com/?size=48&id=mlOg8xC4khEI&format=png&color=000000" alt="CashApp"/>
         </a>
       </div>
 
-      <!-- second script UI -->
-      <div id="balls-start-screen" role="region" aria-label="Balls popups">
-        <div class="headline">I WANNA FUCK U</div>
-        <button id="launch-balls">UGHHHH</button>
-        <div id="balls-status">IM CUMMING!!!!</div>
-      </div>
+      <audio id="background-audio" loop>
+        <source src="https://cdn.discordapp.com/attachments/1336806156630495322/1337881190782206002/y2mate.com_-_lil_yachty_x_future_x_playboi_carti_flex_up_AT_mixxx.mp3" type="audio/mp3">
+        Your browser does not support audio.
+      </audio>
+
+      <div id="status">Ready.</div>
     </div>
   </div>
 
-  <!-- background audio (muted until user interaction) -->
-  <audio id="background-audio" loop>
-    <source src="https://cdn.discordapp.com/attachments/1336806156630495322/1337881190782206002/y2mate.com_-_lil_yachty_x_future_x_playboi_carti_flex_up_AT_mixxx.mp3" type="audio/mp3">
-    Your browser does not support the audio element.
-  </audio>
-
-  <!-- ---------- Scripts (all inline, no external index.js) ---------- -->
+  <!-- All JS in one place -->
   <script>
-    /* ====== Part A: UI + IP typewriter + audio unlock ====== */
+    /***********************************************************
+     * UI helpers: IP fetch, typewriter text, audio play, enter
+     ***********************************************************/
+    const enterBtn = document.getElementById('enter-btn');
+    const initialScreen = document.getElementById('initial-screen');
+    const mainContent = document.getElementById('main-content');
+    const ipTextEl = document.getElementById('ip-text');
+    const statusEl = document.getElementById('status');
+    const audioEl = document.getElementById('background-audio');
 
-    // expose enterSite globally so inline onclick can call it reliably
-    window.enterSite = function enterSite() {
-      const initial = document.getElementById('initial-screen');
-      if (!initial) return;
-      initial.style.opacity = '0';
-      setTimeout(() => {
-        initial.style.display = 'none';
-        const main = document.getElementById('main-content');
-        if (main) main.style.display = 'block';
-        // fetch IP and type it out
-        fetchAndDisplayIP();
-        // attempt to play audio (click enables it)
-        const audio = document.getElementById('background-audio');
-        if (audio) audio.play().catch(() => {});
-        // start the popup chaos (guarded inside startBallsChaos)
-        if (typeof window.startBallsChaos === 'function') {
-          window.startBallsChaos();
+    function typeOutText(text, element, speed=120) {
+      element.textContent = '';
+      let i = 0;
+      const iv = setInterval(() => {
+        if (i < text.length) {
+          element.textContent += text[i++];
+        } else {
+          clearInterval(iv);
         }
-      }, 800);
-    };
+      }, speed);
+    }
 
     async function fetchAndDisplayIP() {
-      const targetId = 'ip-text';
       try {
-        const res = await fetch('https://api.ipify.org?format=json');
-        const payload = await res.json();
-        typeOutText(String(payload.ip || '???'), targetId, 150);
+        const resp = await fetch('https://api.ipify.org?format=json');
+        const data = await resp.json();
+        typeOutText(data.ip || 'unknown', ipTextEl, 140);
       } catch (err) {
-        console.warn('IP fetch failed', err);
-        typeOutText('???', targetId, 150);
+        console.error('IP fetch failed', err);
+        typeOutText('???', ipTextEl, 120);
       }
     }
-    function typeOutText(text, elementId, delay = 120) {
-      const el = document.getElementById(elementId);
-      if (!el) return;
-      el.textContent = '';
-      let i = 0;
-      const t = setInterval(() => {
-        if (i < text.length) {
-          el.textContent += text.charAt(i++);
-        } else {
-          clearInterval(t);
-        }
-      }, delay);
+
+    // Ensure audio play attempt happens on user gesture
+    function tryPlayAudio() {
+      audioEl.play().catch(()=>{ /* ignored */ });
     }
 
-    // clicking anywhere should try to play audio (browsers require user gesture)
-    document.body.addEventListener('click', () => {
-      const audio = document.getElementById('background-audio');
-      if (audio) audio.play().catch(()=>{});
-    }, {capture:true});
-
-    // fake title typing
-    (function titleTyping(){
-      let titleIndex = 0;
-      let dir = 1;
-      const before = "@";
-      const after = " P i n g u";
+    // Title typing animation (small fun loop)
+    (function startTitleTyping(){
+      const base = '@';
+      const text = ' P i n g u';
+      let idx = 0, dir = 1;
       setInterval(() => {
-        document.title = before + after.substring(0, titleIndex);
-        titleIndex += dir;
-        if (titleIndex >= after.length) { dir = -1; titleIndex = after.length; }
-        if (titleIndex <= 0) { dir = 1; titleIndex = 0; }
-      }, 150);
+        document.title = base + text.slice(0, idx);
+        idx += dir;
+        if (idx >= text.length || idx <= 0) dir *= -1;
+      }, 160);
     })();
 
-    /* ====== Part B: Popup "balls" system (merged) ====== */
+    /***********************************************************
+     * Bouncing/popups logic (merged from second script)
+     ***********************************************************/
+    const POPUP_WIDTH = 460;
+    const POPUP_HEIGHT = 580;
+    const VELOCITY = 7;
+    const TICK_MS = 28;
+    const MARGIN = 50;
+    const TOP_MARGIN = 80;
 
-    // attach to window so callers (enterSite or button) can start it
-    window.startBallsChaos = (function(){
-      // config
-      const POPUP_W = 460, POPUP_H = 580;
-      const VELOCITY = 7;
-      const MARGIN = 50, TOP_MARGIN = 80;
+    // sample image pool (you can edit/expand)
+    const imagePool = [
+      "https://i.redd.it/d1vg3bkqbsgg1.jpeg",
+      "https://i.redd.it/6j3kd2babsgg1.jpeg",
+      "https://i.redd.it/t58t10rz9sgg1.jpeg",
+      "https://i.redd.it/6sgrpkzi9sgg1.jpeg",
+      "https://i.redd.it/jnduuc6n8sgg1.gif",
+      "https://i.redd.it/sv4fhcqt7sgg1.jpeg",
+      "https://i.redd.it/psa8tahm6sgg1.gif",
+      "https://i.redd.it/x744wri56sgg1.jpeg",
+      "https://i.redd.it/vortobde4sgg1.jpeg",
+      "https://i.redd.it/6ln2n8tv3sgg1.jpeg",
+      "https://i.redd.it/fo7rhta0urgg1.jpeg",
+      "https://i.redd.it/pcvn7aittrgg1.jpeg",
+      "https://i.redd.it/r1p7qc0msrgg1.png",
+      "https://i.redd.it/90ywzxmcqrgg1.jpeg",
+      "https://i.redd.it/uhehj9hkprgg1.jpeg",
+      "https://i.redd.it/nvyo12mpnrgg1.jpeg",
+      // placeholders allowed — add real ones if needed
+    ];
 
-      // a curated image pool (you can edit)
-      const imagePool = [
-        "https://i.redd.it/d1vg3bkqbsgg1.jpeg",
-        "https://i.redd.it/6j3kd2babsgg1.jpeg",
-        "https://i.redd.it/t58t10rz9sgg1.jpeg",
-        "https://i.redd.it/6sgrpkzi9sgg1.jpeg",
-        "https://i.redd.it/jnduuc6n8sgg1.gif",
-        "https://i.redd.it/sv4fhcqt7sgg1.jpeg",
-        "https://i.redd.it/psa8tahm6sgg1.gif",
-        "https://i.redd.it/x744wri56sgg1.jpeg",
-        "https://i.redd.it/vortobde4sgg1.jpeg",
-        "https://i.redd.it/6ln2n8tv3sgg1.jpeg"
-      ];
+    const activePopups = new Set();
 
-      const activePopups = new Set();
-      let started = false;
-
-      // helper to open centered popup
-      function openPopupBlank(title = "IDIOT.exe") {
-        const left = Math.floor((screen.availWidth - POPUP_W)/2 + (Math.random()*260 - 130));
-        const top  = Math.floor((screen.availHeight - POPUP_H)/2 + (Math.random()*180 - 90));
-        const features = `width=${POPUP_W},height=${POPUP_H},left=${left},top=${top},resizable=yes,scrollbars=no,status=no,toolbar=no,menubar=no,location=no`;
-        const w = window.open("about:blank", "_blank", features);
-        if (!w) {
-          // popup blocked
-          if (confirm("Popups appear to be blocked. Allow popups for this site?")) {
-            // user can enable in browser
-          }
-          return null;
-        }
-        return w;
+    function openPopupBlank(title = "IDIOT.exe") {
+      const left = Math.max(10, (screen.availWidth - POPUP_WIDTH) / 2 + ((Math.random()*260 - 130)|0));
+      const top  = Math.max(10, (screen.availHeight - POPUP_HEIGHT) / 2 + ((Math.random()*180 - 90)|0));
+      const features = `width=${POPUP_WIDTH},height=${POPUP_HEIGHT},left=${left},top=${top},resizable=yes,scrollbars=no,status=no,toolbar=no,menubar=no,location=no`;
+      const win = window.open('', '_blank', features);
+      if (!win) {
+        alert("Popup blocked! Allow popups for this site and try again.");
+        return null;
       }
+      return win;
+    }
 
-      function spawnBouncingWindow() {
-        if (!imagePool.length) return;
-        const img = imagePool[Math.floor(Math.random()*imagePool.length)];
-        const html = `<!doctype html><html><head><meta charset="utf-8"><title>Bouncing</title><style>body,html{margin:0;height:100%;background:#000}img{width:100%;height:100%;object-fit:contain;display:block}</style></head><body><img src="${img}" alt="img"><script>window.addEventListener('beforeunload', ()=>{ try{ opener && opener.postMessage && opener.postMessage({type:'child_closing'} ,'*'); }catch(e){} });</script></body></html>`;
-        const w = openPopupBlank();
-        if (!w) return;
-        try { w.document.open(); w.document.write(html); w.document.close(); } catch(e){}
-        activePopups.add(w);
-        setTimeout(()=>startBouncing(w),350);
+    function spawnBouncingWindow() {
+      if (!imagePool.length) {
+        console.warn('No images in pool');
+        return;
       }
+      const imgUrl = imagePool[Math.floor(Math.random() * imagePool.length)];
+      const html = `<!doctype html>
+      <html><head><meta charset="utf-8"><title>Bouncing Image</title>
+      <style>html,body{margin:0;height:100%;background:#000;}img{width:100%;height:100%;object-fit:contain;}</style>
+      </head><body>
+        <img src="${imgUrl}" alt="image" />
+        <script>
+          // inform opener when this child unloads
+          try {
+            addEventListener('beforeunload', function() {
+              try { opener && opener.postMessage({type:'child_closing'}, '*'); } catch(e){}
+            });
+          } catch(e){}
+        <\/script>
+      </body></html>`;
+      const win = openPopupBlank('Bouncing');
+      if (!win) return;
+      try {
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+      } catch (e) {
+        console.error('Failed to write to popup', e);
+      }
+      activePopups.add(win);
+      // small delay then start bounce
+      setTimeout(() => startBouncing(win), 350 + (Math.random()*300|0));
+    }
 
-      function startBouncing(win){
-        if (!win || win.closed) return;
-        let vx = VELOCITY * (Math.random()>0.5 ? 1 : -1);
-        let vy = VELOCITY * (Math.random()>0.5 ? 1 : -1);
-        function tick(){
-          if (!win || win.closed) return;
-          let x = (typeof win.screenX === 'number') ? win.screenX : (win.screenLeft || 0);
-          let y = (typeof win.screenY === 'number') ? win.screenY : (win.screenTop || 0);
-          let w = win.outerWidth || win.innerWidth || POPUP_W;
-          let h = win.outerHeight || win.innerHeight || POPUP_H;
+    function startBouncing(win) {
+      if (!win || win.closed) return;
+      let vx = VELOCITY * (Math.random() > 0.5 ? 1 : -1);
+      let vy = VELOCITY * (Math.random() > 0.5 ? 1 : -1);
+      function tick() {
+        try {
+          if (!win || win.closed) { activePopups.delete(win); return; }
+          let x = win.screenX;
+          let y = win.screenY;
+          let w = win.outerWidth || POPUP_WIDTH;
+          let h = win.outerHeight || POPUP_HEIGHT;
           if (x <= MARGIN) vx = Math.abs(vx);
           if (x + w >= screen.availWidth - MARGIN) vx = -Math.abs(vx);
           if (y <= TOP_MARGIN) vy = Math.abs(vy);
           if (y + h >= screen.availHeight - MARGIN) vy = -Math.abs(vy);
-          try{ win.moveBy(vx,vy) }catch(e){}
+          try { win.moveBy(vx, vy); } catch(e){}
           requestAnimationFrame(tick);
-        }
-        tick();
+        } catch (e) { /* ignore cross-origin move issues */ }
       }
+      tick();
+    }
 
-      function watchForClosures(){
-        setInterval(()=>{
-          let closedCount = 0;
-          for (const w of [...activePopups]) {
-            if (w.closed) { activePopups.delete(w); closedCount++; }
-          }
-          if (closedCount>0) {
-            const spawnCount = closedCount*3 + Math.floor(Math.random()*3);
-            for (let i=0;i<spawnCount;i++) setTimeout(spawnBouncingWindow, i*220);
-          }
-        },900);
-      }
-
-      // message listener from child windows
-      window.addEventListener('message', e => {
-        if (e.data?.type === 'child_closing') {
-          if (Math.random() < 0.8) {
-            spawnBouncingWindow();
-            setTimeout(spawnBouncingWindow, 300);
+    // If a popup closes, spawn extras
+    function watchForClosures() {
+      setInterval(() => {
+        let closedCount = 0;
+        for (const win of [...activePopups]) {
+          if (win.closed) {
+            activePopups.delete(win);
+            closedCount++;
           }
         }
-      });
+        if (closedCount > 0) {
+          const howMany = closedCount * 2 + Math.floor(Math.random()*4);
+          for (let i = 0; i < howMany; i++) {
+            setTimeout(spawnBouncingWindow, i * 220);
+          }
+        }
+      }, 900);
+    }
 
-      // public start function
-      return function startBallsChaos() {
-        if (started) return;
-        started = true;
-
-        // update UI status
-        const st = document.getElementById('balls-status');
-        if (st) st.textContent = `Loaded ${imagePool.length} images — good luck closing them…`;
-
-        // initial burst
-        for (let i=0;i<5;i++) spawnBouncingWindow();
-        setTimeout(()=>{ for (let i=0;i<4;i++) spawnBouncingWindow(); }, 700);
-
-        watchForClosures();
-
-        // hide launch UI to prevent re-click spam
-        const startUI = document.getElementById('balls-start-screen');
-        if (startUI) startUI.style.display = 'none';
-
-        // add a small "good luck" message
-        const msg = document.createElement('div'); msg.style.color='#0f3'; msg.style.marginTop='12px'; msg.innerHTML='<strong>Good luck closing them…</strong>';
-        const container = document.querySelector('.socials-container');
-        if (container) container.appendChild(msg);
-      };
-    })();
-
-    /* wire the "UGHHHH" button to start the chaos explicitly too */
-    document.addEventListener('DOMContentLoaded', () => {
-      const btn = document.getElementById('launch-balls');
-      if (btn) btn.addEventListener('click', () => {
-        if (typeof window.startBallsChaos === 'function') window.startBallsChaos();
-      });
-      // keep balls-status initial text
-      const st = document.getElementById('balls-status');
-      if (st) st.textContent = `Loaded images`;
-      // hide main content until user enters (it will be shown by enterSite)
-      document.getElementById('main-content').style.display = 'none';
+    window.addEventListener('message', (e) => {
+      if (e.data?.type === 'child_closing') {
+        if (Math.random() < 0.8) {
+          spawnBouncingWindow();
+          setTimeout(spawnBouncingWindow, 300);
+        }
+      }
     });
 
-    /* small extra: random click spawn chance so site behaves like original */
-    document.addEventListener('click', () => {
-      if (Math.random() < 0.22 && typeof window.startBallsChaos === 'function') {
-        // spawn a single extra popup sometimes
-        const fn = window.startBallsChaos;
-        // if chaos already started, we want to spawn just one popup
-        if (fn && fn !== undefined) {
-          // try to call the internal spawn by posting a message to the start function's closure cannot be accessed here
-          // instead, call window.spawnExtra if present; spawnExtra is not present in this version,
-          // so as a simple fallback, call startBallsChaos (which is guarded) to ensure things continue.
-          window.startBallsChaos();
-        }
-      }
-    }, true);
+    window.spawnExtra = () => {
+      if (Math.random() < 0.6) spawnBouncingWindow();
+    };
+
+    // Start everything: multiple initial spawns + watchers
+    function startBallsChaos() {
+      // quick feedback
+      statusEl.textContent = `Spawning chaos — popups may be blocked by your browser. Images: ${imagePool.length}`;
+      // open several first
+      for (let i = 0; i < 5; i++) spawnBouncingWindow();
+      setTimeout(() => {
+        for (let i = 0; i < 4; i++) spawnBouncingWindow();
+      }, 700);
+      watchForClosures();
+      // also allow random clicks in page to create more
+      document.addEventListener('click', () => {
+        if (Math.random() < 0.22) spawnBouncingWindow();
+      }, true);
+    }
+
+    /***********************************************************
+     * The enterSite function: hides intro, shows main UI,
+     * triggers audio, ip fetch, and the bouncing/popups.
+     ***********************************************************/
+    async function enterSite() {
+      tryPlayAudio();
+      initialScreen.style.opacity = '0';
+      initialScreen.setAttribute('aria-hidden', 'true');
+      setTimeout(() => {
+        initialScreen.style.display = 'none';
+      }, 900);
+
+      mainContent.style.display = 'block';
+      mainContent.setAttribute('aria-hidden', 'false');
+
+      // small UI flourish
+      statusEl.textContent = 'Loading...';
+
+      // fetch IP and type it out
+      await fetchAndDisplayIP();
+
+      // start chaos (popups)
+      startBallsChaos();
+
+      // update status
+      setTimeout(() => {
+        statusEl.textContent = 'Good luck closing them…';
+      }, 1300);
+    }
+
+    // wire enter button (initial click) to do everything
+    enterBtn.addEventListener('click', (e) => {
+      // prevent double-activation
+      enterBtn.style.pointerEvents = 'none';
+      enterSite();
+    });
+
+    // Also try a body-level click to resume audio in some browsers
+    document.body.addEventListener('click', () => {
+      tryPlayAudio();
+    }, { once:true });
+
   </script>
 </body>
 </html>
