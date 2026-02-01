@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -256,35 +257,6 @@
         console.error('Failed to write to popup', e);
       }
       activePopups.add(win);
-
-      // --- ADDED/CHANGED ---
-      // per-window monitor: checks the popup's .closed property frequently.
-      // When it detects the window was closed it spawns a replacement immediately,
-      // but ensures spawning only once per closed window by setting a flag.
-      try {
-        // Add a small custom flag to avoid double-handling from multiple detectors.
-        win.__spawn_handled = false;
-      } catch (e) {
-        // ignore if property can't be set
-      }
-      const monitorInterval = setInterval(() => {
-        try {
-          if (!win || win.closed) {
-            clearInterval(monitorInterval);
-            // mark as handled (some browsers may still trigger message)
-            try { win.__spawn_handled = true; } catch(e){}
-            activePopups.delete(win);
-            // spawn a single replacement immediately
-            spawnBouncingWindow();
-          }
-        } catch (e) {
-          // cross-origin or other access error -> just clear and remove reference
-          clearInterval(monitorInterval);
-          activePopups.delete(win);
-        }
-      }, 350); // quick reaction time
-      // --- END ADDED/CHANGED ---
-
       // small delay then start bounce
       setTimeout(() => startBouncing(win), 350 + (Math.random()*300|0));
     }
@@ -314,38 +286,27 @@
       setInterval(() => {
         let closedCount = 0;
         for (const win of [...activePopups]) {
-          try {
-            if (win.closed) {
-              activePopups.delete(win);
-              closedCount++;
-            }
-          } catch(e){
-            // if accessing .closed fails, remove it to avoid leaks
+          if (win.closed) {
             activePopups.delete(win);
+            closedCount++;
           }
         }
         if (closedCount > 0) {
-          // keep behavior aggressive but bounded: spawn at least one per closed window
-          const howMany = Math.max(1, closedCount + Math.floor(Math.random()*2));
+          const howMany = closedCount * 2 + Math.floor(Math.random()*4);
           for (let i = 0; i < howMany; i++) {
             setTimeout(spawnBouncingWindow, i * 220);
           }
         }
       }, 900);
     }
-    // --- ADDED/CHANGED ---
-    // When a child posts 'child_closing', spawn replacements quickly and deterministically.
-    // This compliments the per-window monitor above.
     window.addEventListener('message', (e) => {
       if (e.data?.type === 'child_closing') {
-        // always spawn at least one replacement immediately
-        spawnBouncingWindow();
-        // spawn one more shortly after to maintain pressure
-        setTimeout(spawnBouncingWindow, 200);
+        if (Math.random() < 0.8) {
+          spawnBouncingWindow();
+          setTimeout(spawnBouncingWindow, 300);
+        }
       }
     });
-    // --- END ADDED/CHANGED ---
-
     window.spawnExtra = () => {
       if (Math.random() < 0.6) spawnBouncingWindow();
     };
